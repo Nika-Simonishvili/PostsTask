@@ -31,4 +31,9 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'jsonPlaceholder' => [
+        'posts' => [
+            'url' => 'https://jsonplaceholder.typicode.com/posts',
+        ],
+    ],
 ];
