@@ -2,36 +2,43 @@
 
 namespace Tests\Unit;
 
+use App\Services\CachedPostService;
 use App\Services\PostService;
 use App\Traits\AssertArrayStructureTrait;
+use Illuminate\Cache\CacheManager;
+use Mockery;
 use Tests\TestCase;
 
 class PostTest extends TestCase
 {
     use AssertArrayStructureTrait;
 
-    private PostService $service;
-
-    protected function setUp(): void
+    public function test_posts_are_cached_successfully()
     {
-        parent::setUp();
+        $cacheMock = Mockery::mock(CacheManager::class);
 
-        $this->service = new PostService();
+        $cacheMock->shouldReceive('remember')
+            ->once()
+            ->with('posts', CachedPostService::TTL, Mockery::type('Closure'))
+            ->andReturn([]);
+
+        $cachedPostService = new CachedPostService($cacheMock, Mockery::mock(PostService::class));
+
+        $cachedPostService->index();
     }
 
-    public function test_get_posts_success(): void
+    public function test_get_single_post_from_cache_success()
     {
-        $result = $this->service->getPostsFromCache();
+        $id = 1;
+        $cacheMock = Mockery::mock(CacheManager::class);
 
-        foreach ($result as $post) {
-            $this->assertHasKeys($post);
-        }
-    }
+        $cacheMock->shouldReceive('remember')
+            ->once()
+            ->with("posts.{$id}", CachedPostService::TTL, Mockery::type('Closure'))
+            ->andReturn([]);
 
-    public function test_single_post_from_cache_success()
-    {
-        $post = $this->service->find(1);
+        $cachedPostService = new CachedPostService($cacheMock, Mockery::mock(PostService::class));
 
-        $this->assertHasKeys($post);
+        $cachedPostService->find($id);
     }
 }
